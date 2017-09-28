@@ -76,10 +76,13 @@ get_dependencies() {
 
   while read package version; do
     (
-      local pkg_path=$(echo "$package" | awk -F/ '{print $1"/"$2"/"$3}')
-      local install_path="${GOPATH%%:*}/src/${pkg_path%%/...}"
       echo ">> Setting $package to version $version" >&3
+      local parent_dirs=$(echo "$package" | awk -F/ '{print NF - 1}')
+      local install_path="${GOPATH%%:*}/src/${package%%/...}"
       cd "$install_path"
+      while [ ! -d .bzr ] && [ ! -d .git ] && [ ! -d .hg ] && [ ! -d .svn ] && [ $parent_dirs -gt 0 ]; do
+        cd .. && ((--parent_dirs))
+      done
       is_in_use && wait
 
       [ -d .bzr ] && bzr revert   -q -r   "$version"
