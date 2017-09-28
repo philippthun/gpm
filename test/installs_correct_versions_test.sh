@@ -17,6 +17,14 @@ pushd "${GOPATH%%:*}/src/github.com/garyburd/redigo"
 assert "git rev-parse HEAD" "$version"
 popd
 
+# Repository's root on second level (e.g. cloud.google.com/go)
+version="2e6a95edb1071d750f6d7db777bf66cd2997af6c"
+echo "cloud.google.com/go/compute/metadata $version" > Godeps
+assert_raises "$GPM"
+pushd "${GOPATH%%:*}/src/cloud.google.com/go/compute/metadata"
+assert "git rev-parse HEAD" "$version"
+popd
+
 ## Cleanup
 rm Godeps
 
