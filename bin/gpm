@@ -25,6 +25,11 @@ SYNOPSIS
     provides vendoring functionalities, it alters your GOPATH so every project
     has its own isolated dependency directory, its usage is recommended.
 
+    gpm uses subshells to run commands in parallel for performance reasons. In
+    some occasions, e.g. when specified packages depend on each other, this
+    might result in an error. To instruct gpm to execute go get commands
+    sequentially, you can set environment variable GPM_GET_SERIAL.
+
 USAGE
       $ gpm             # Same as 'gpm get'.
       $ gpm get         # Parses the Godeps file, gets dependencies and sets them
@@ -57,10 +62,14 @@ get_dependencies() {
   [[ -r "$1" ]] || abort ">> $1 file does not exist."
   local deps=$(sed 's/#.*//;/^\s*$/d' < "$1") || echo ""
 
+  [[ -v "GPM_GET_SERIAL" ]] && temp_dir=$(mktemp -d) && trap 'rm -rf $temp_dir' EXIT
+
   while read package _; do
     (
+      [[ -v "GPM_GET_SERIAL" ]] && while ! (set -o noclobber; echo > "$temp_dir/.lock" ) 2> /dev/null; do sleep 10; done
       echo ">> Getting package "$package"" >&3
       go get -u -d "$package" || abort ">> Failed getting package "$package""
+      [[ -v "GPM_GET_SERIAL" ]] && rm "$temp_dir/.lock"
     ) &
   done < <(echo "$deps")
   wait
