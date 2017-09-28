@@ -37,7 +37,7 @@ EOF
 }
 
 is_in_use() {
-  [[ -e "$1/.git/index.lock" || -e "$1/.hg/store/lock"  || -e "$1/.bzr/checkout/lock" ]]
+  [[ -e ".git/index.lock" || -e ".hg/store/lock"  || -e ".bzr/checkout/lock" ]]
 }
 
 # Exit with an error message to stderr. An optional second argument sets the
@@ -71,7 +71,7 @@ get_dependencies() {
       local install_path="${GOPATH%%:*}/src/${pkg_path%%/...}"
       echo ">> Setting $package to version $version" >&3
       cd "$install_path"
-      is_in_use $install_path && wait
+      is_in_use && wait
 
       [ -d .bzr ] && bzr revert   -q -r   "$version"
       [ -d .git ] && git checkout -q      "$version"
